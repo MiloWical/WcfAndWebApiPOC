@@ -4,7 +4,7 @@
     using Components;
     using Microsoft.AspNetCore.Mvc;
 
-    [Route("process")]
+    [Route("rest/process")]
     public class RestNumberController : Controller
     {
         private readonly INumberProcessor _processor;
