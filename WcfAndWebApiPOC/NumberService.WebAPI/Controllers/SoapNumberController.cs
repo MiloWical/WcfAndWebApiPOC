@@ -3,10 +3,12 @@
     using System;
     using System.IO;
     using System.Xml;
+    using System.Xml.Serialization;
     using Attributes;
     using Components;
     using Extensions;
     using Microsoft.AspNetCore.Mvc;
+    using Models;
 
     [Route("process")]
     public class SoapNumberController : Controller
@@ -23,6 +25,7 @@
         private const string SumValueXPath = "/Sum/values/int";
         private const string ProductValueXPath = "/svc:Product/svc:values/arr:int";
 
+        private readonly XmlSerializer _sumSerializer;
 
         private readonly INumberProcessor _processor;
 
@@ -33,6 +36,8 @@
             _namespaceManager = new XmlNamespaceManager(new NameTable());
             _namespaceManager.AddNamespace(ServiceNamespacePrefix, ServiceNamespace);
             _namespaceManager.AddNamespace(ArrayNamespacePrefix, ArrayNamespace);
+
+            _sumSerializer = new XmlSerializer(typeof(SumModel));
         }
 
         [HttpPost("abs")]
@@ -47,10 +52,21 @@
 
         [HttpPost("sum")]
         [SoapAction("\"http://tempuri.org/INumberService/Sum\"")]
-        [SoapEnvelopeFilter(ServiceNamespace, "Sum")]
+        [SoapEnvelopeFilter(ServiceNamespace, "Sum", false)]
         public string Sum()
         {
-            var values = Request.Body.ReadIntArrayFrom(SumValueXPath);
+            //Uncomment this if you want to strip namespaces (stripNamespacesFromBody = true)
+            //and use XPath to get values.
+            //-------------------------------------------------------------------------------
+            //var values = Request.Body.ReadIntArrayFrom(SumValueXPath);
+            //-------------------------------------------------------------------------------
+
+            //Uncomment this if you want to preverse namespaces (stripNamespacesFromBody = false)
+            //and use an XmlSerializer to get values.
+            //-----------------------------------------------------------------------------------
+            var deserializedModel = (SumModel) _sumSerializer.Deserialize(Request.Body);
+            var values = deserializedModel.values;
+            //-----------------------------------------------------------------------------------
 
             return _processor.Sum(values).ToString();
         }
