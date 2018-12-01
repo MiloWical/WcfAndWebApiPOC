@@ -13,6 +13,7 @@ using Microsoft.Extensions.Options;
 namespace NumberService.WebAPI
 {
     using Components;
+    using Controllers;
 
     public class Startup
     {
@@ -29,6 +30,9 @@ namespace NumberService.WebAPI
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             
             services.AddSingleton<INumberProcessor, NumberProcessor>();
+
+            //Uncomment this once you've got a working queue connection.
+            //services.AddSingleton<QueueNumberController>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,6 +44,7 @@ namespace NumberService.WebAPI
             }
 
             app.UseMvc();
+            app.ApplicationServices.GetService<QueueNumberController>(); //Initializes the listener
 
             //app.UseMvc(router => router.Routes.Add(new SoapActionRouter<NumberController>(router.DefaultHandler)));
         }
