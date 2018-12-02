@@ -42,7 +42,8 @@
 
         [HttpPost("abs")]
         [SoapAction("\"http://tempuri.org/INumberService/Abs\"")]
-        [SoapEnvelopeFilter(ServiceNamespace, "Abs")]
+        [SoapProcessing(ServiceNamespace = ServiceNamespace, 
+            OperationName = "Abs")]
         public string Abs()
         {
             var value = Request.Body.ReadSingleIntFrom(AbsValueXPath);
@@ -52,16 +53,18 @@
 
         [HttpPost("sum")]
         [SoapAction("\"http://tempuri.org/INumberService/Sum\"")]
-        [SoapEnvelopeFilter(ServiceNamespace, "Sum", false)]
+        [SoapProcessing(ServiceNamespace = ServiceNamespace, 
+            OperationName = "Sum", 
+            RemoveNamespacesFromRequest = false)]
         public string Sum()
         {
-            //Uncomment this if you want to strip namespaces (stripNamespacesFromBody = true)
+            //Uncomment this if you want to strip namespaces (RemoveNamespacesFromRequest = true)
             //and use XPath to get values.
             //-------------------------------------------------------------------------------
             //var values = Request.Body.ReadIntArrayFrom(SumValueXPath);
             //-------------------------------------------------------------------------------
 
-            //Uncomment this if you want to preverse namespaces (stripNamespacesFromBody = false)
+            //Uncomment this if you want to preverse namespaces (RemoveNamespacesFromRequest = false)
             //and use an XmlSerializer to get values.
             //-----------------------------------------------------------------------------------
             var deserializedModel = (SumModel) _sumSerializer.Deserialize(Request.Body);
@@ -73,7 +76,12 @@
 
         [HttpPost("product")]
         [SoapAction("\"http://tempuri.org/INumberService/Product\"")]
-        [SoapEnvelopeFilter(ServiceNamespace, "Product", false)]
+        [SoapProcessing(ServiceNamespace = ServiceNamespace,
+            OperationName = "Product",
+            RemoveNamespacesFromRequest = false,
+            WrapResponseInSoapEnvelope = true,
+            WrapResponseInOperationResponseTag = true,
+            WrapResponseInOperationResultTag = true)]
         public string Product()
         {
             var values = Request.Body.ReadIntArrayFrom(ProductValueXPath, _namespaceManager);

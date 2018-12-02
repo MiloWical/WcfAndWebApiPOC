@@ -3,12 +3,22 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Xml;
     using System.Xml.Linq;
     using System.Xml.XPath;
+    using Attributes;
+    using Constants;
 
     public static class XmlProcessingExtensions
     {
+        private static readonly XmlNamespaceManager SoapNamespaceManager = new XmlNamespaceManager(new NameTable());
+
+        static XmlProcessingExtensions()
+        {
+            SoapNamespaceManager.AddNamespace(SoapConstants.SoapNamespacePrefix, SoapConstants.SoapEnvelopeNamespace);
+        }
+
         //C.f.: https://stackoverflow.com/questions/30190246/remove-element-namespace-prefixes-from-xml-string-fragment
         public static void RemoveNamespaces(this XElement node)
         {
@@ -49,6 +59,82 @@
                 : document.XPathSelectElements(xPath, resolver);
 
             return nodes.Select(node => int.Parse(node.Value)).ToArray();
+        }
+
+        public static MemoryStream ToMemoryStream(this XElement element)
+        {
+            var outputStream = new MemoryStream();
+            element.Save(outputStream);
+
+            //Reset the stream - the Save operation doesn't do it for you.
+            outputStream.Seek(0, SeekOrigin.Begin);
+
+            return outputStream;
+        }
+
+        public static MemoryStream ToMemoryStream(this string data)
+        {
+            var outputStream = new MemoryStream(Encoding.UTF8.GetBytes(data));
+
+            //Reset the stream, just in case
+            outputStream.Seek(0, SeekOrigin.Begin);
+
+            return outputStream;
+        }
+
+        public static string ReadToString(this Stream stream)
+        {
+            //Intentionally not using a using block because I don't want to close the stream
+            var reader = new StreamReader(stream);
+            var output = reader.ReadToEnd();
+
+            //Reset the stream, just in case
+            stream.Seek(0, SeekOrigin.Begin);
+
+            return output;
+        }
+
+        public static string WrapInSoapEnvelope(this string content)
+        {
+            var soapEnvelope = XDocument.Load(new StringReader(SoapConstants.SoapEnvelopeXml));
+
+            var body = soapEnvelope.XPathSelectElement(SoapConstants.SoapEnvelopeBodyXPath, SoapNamespaceManager);
+
+            AddXElementData(body, content);
+
+            return soapEnvelope.ToString(SaveOptions.OmitDuplicateNamespaces);
+        }
+
+        public static Stream WrapInSoapEnvelope(this Stream content)
+        {
+            var stringContent = content.ReadToString();
+
+            return stringContent.WrapInSoapEnvelope().ToMemoryStream();
+        }
+
+        public static string WrapInOperationTag(this string response, string operation, string serviceNamespacePrefix,
+            string serviceNamespace, string tagSuffix = "")
+        {
+            var printColon = !string.IsNullOrEmpty(serviceNamespacePrefix);
+
+            var tagXml =
+                $"<{serviceNamespacePrefix}{(printColon ? ":" : string.Empty)}{operation}{tagSuffix} xmlns{(printColon ? ":" : string.Empty)}{serviceNamespacePrefix}=\"{serviceNamespace}\"/>";
+
+            var taggedMessage = XElement.Parse(tagXml);
+
+            AddXElementData(taggedMessage, response);
+
+            return taggedMessage.ToString(SaveOptions.OmitDuplicateNamespaces);
+        }
+
+        private static void AddXElementData(XElement element, string data)
+        {
+            if (data == null)
+                element.Value = string.Empty;
+            else if (!data.TrimStart().StartsWith('<')) //If it's not XML, don't try to parse it
+                element.Value = data;
+            else
+                element.Add(XElement.Parse(data));
         }
     }
 }
