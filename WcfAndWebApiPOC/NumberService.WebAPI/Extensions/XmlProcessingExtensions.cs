@@ -96,20 +96,7 @@
 
         public static string WrapInSoapEnvelope(this string content)
         {
-            var soapEnvelope = XDocument.Load(new StringReader(SoapConstants.SoapEnvelopeXml));
-
-            var body = soapEnvelope.XPathSelectElement(SoapConstants.SoapEnvelopeBodyXPath, SoapNamespaceManager);
-
-            AddXElementData(body, content);
-
-            return soapEnvelope.ToString(SaveOptions.OmitDuplicateNamespaces);
-        }
-
-        public static Stream WrapInSoapEnvelope(this Stream content)
-        {
-            var stringContent = content.ReadToString();
-
-            return stringContent.WrapInSoapEnvelope().ToMemoryStream();
+            return string.Format(SoapConstants.SoapEnvelopeXmlTemplate, content);
         }
 
         public static string WrapInOperationTag(this string response, string operation, string serviceNamespacePrefix,
@@ -117,14 +104,14 @@
         {
             var printColon = !string.IsNullOrEmpty(serviceNamespacePrefix);
 
-            var tagXml =
-                $"<{serviceNamespacePrefix}{(printColon ? ":" : string.Empty)}{operation}{tagSuffix} xmlns{(printColon ? ":" : string.Empty)}{serviceNamespacePrefix}=\"{serviceNamespace}\"/>";
+            var tagName = $"{serviceNamespacePrefix}{(printColon ? ":" : string.Empty)}{operation}{tagSuffix}";
+            var tagNamespaceDeclaration = $"xmlns{(printColon ? ":" : string.Empty)}{serviceNamespacePrefix}";
+            var tagContents = string.IsNullOrWhiteSpace(response) ? string.Empty : response;
 
-            var taggedMessage = XElement.Parse(tagXml);
+            var xml =
+                $"<{tagName} {tagNamespaceDeclaration}=\"{serviceNamespace}\">{tagContents}</{tagName}>";
 
-            AddXElementData(taggedMessage, response);
-
-            return taggedMessage.ToString(SaveOptions.OmitDuplicateNamespaces);
+            return xml;
         }
 
         private static void AddXElementData(XElement element, string data)

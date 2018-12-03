@@ -11,8 +11,8 @@ namespace NumberService.WebAPI.Constants
         public const string ServiceNamespacePrefix = "s";
         public const string SoapEnvelopeNamespace = "http://schemas.xmlsoap.org/soap/envelope/";
 
-        public static readonly string SoapEnvelopeXml =
-            $"<{SoapNamespacePrefix}:Envelope xmlns:{SoapNamespacePrefix}=\"{SoapEnvelopeNamespace}\"><{SoapNamespacePrefix}:Body></{SoapNamespacePrefix}:Body></{SoapNamespacePrefix}:Envelope>";
+        public static readonly string SoapEnvelopeXmlTemplate =
+            $"<{SoapNamespacePrefix}:Envelope xmlns:{SoapNamespacePrefix}=\"{SoapEnvelopeNamespace}\"><{SoapNamespacePrefix}:Body>{{0}}</{SoapNamespacePrefix}:Body></{SoapNamespacePrefix}:Envelope>";
 
         public static readonly string SoapEnvelopeBodyXPath = $"/{SoapNamespacePrefix}:Envelope/{SoapNamespacePrefix}:Body";
 

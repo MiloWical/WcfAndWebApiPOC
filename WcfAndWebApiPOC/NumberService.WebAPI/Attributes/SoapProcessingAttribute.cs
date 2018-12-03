@@ -79,20 +79,41 @@ namespace NumberService.WebAPI.Attributes
 
         private string ProcessResponseFormatting(string response)
         {
-            var modifiedResponse = response;
+            var modifiedResponse = BuildPayload(response);
+
+            modifiedResponse = CleanupXml(modifiedResponse);
+
+            return modifiedResponse;
+        }
+
+        public string BuildPayload(string data)
+        {
+            var modifiedData = data;
 
             if (WrapResponseInOperationResultTag)
-                modifiedResponse = modifiedResponse.WrapInOperationTag(OperationName,
+                modifiedData = modifiedData.WrapInOperationTag(OperationName,
                     SoapConstants.ServiceNamespacePrefix, ServiceNamespace, SoapConstants.OperationResultSuffix);
 
             if (WrapResponseInOperationResponseTag)
-                modifiedResponse = modifiedResponse.WrapInOperationTag(OperationName,
+                modifiedData = modifiedData.WrapInOperationTag(OperationName,
                     SoapConstants.ServiceNamespacePrefix, ServiceNamespace, SoapConstants.OperationResponseSuffix);
 
             if (WrapResponseInSoapEnvelope)
-                modifiedResponse = modifiedResponse.WrapInSoapEnvelope();
+                modifiedData = modifiedData.WrapInSoapEnvelope();
 
-            return modifiedResponse;
+            return modifiedData;
+        }
+
+        public string CleanupXml(string data)
+        {
+            if (data == null)
+                return string.Empty;
+
+            if (!data.TrimStart().StartsWith('<')) //If it's not XML, don't try to parse it
+                return data;
+
+            var element = XElement.Parse(data); //This fails if it's not valid XML
+            return element.ToString(SaveOptions.OmitDuplicateNamespaces); //Do this to clean up namespaces
         }
 
         private XElement GetRequestRootXElement(XDocument soapRequest)

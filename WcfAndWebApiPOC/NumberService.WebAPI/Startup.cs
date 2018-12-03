@@ -43,7 +43,7 @@ namespace NumberService.WebAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMvc();
+            app.UseMvc(routes => routes.MapRoute("SOAP", "{controller=Soap}"));
             app.ApplicationServices.GetService<QueueNumberController>(); //Initializes the listener
 
             //app.UseMvc(router => router.Routes.Add(new SoapActionRouter<NumberController>(router.DefaultHandler)));

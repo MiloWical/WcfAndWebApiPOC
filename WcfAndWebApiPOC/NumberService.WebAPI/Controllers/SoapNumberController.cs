@@ -40,7 +40,6 @@
             _sumSerializer = new XmlSerializer(typeof(SumModel));
         }
 
-        [HttpPost("abs")]
         [SoapAction("\"http://tempuri.org/INumberService/Abs\"")]
         [SoapProcessing(ServiceNamespace = ServiceNamespace, 
             OperationName = "Abs")]
@@ -51,7 +50,6 @@
             return _processor.AbsoluteValue(value).ToString();
         }
 
-        [HttpPost("sum")]
         [SoapAction("\"http://tempuri.org/INumberService/Sum\"")]
         [SoapProcessing(ServiceNamespace = ServiceNamespace, 
             OperationName = "Sum", 
@@ -74,7 +72,6 @@
             return _processor.Sum(values).ToString();
         }
 
-        [HttpPost("product")]
         [SoapAction("\"http://tempuri.org/INumberService/Product\"")]
         [SoapProcessing(ServiceNamespace = ServiceNamespace,
             OperationName = "Product",
